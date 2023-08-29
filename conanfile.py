@@ -1,6 +1,7 @@
 from conan import ConanFile
 from conan.errors import ConanException
 from conan.errors import ConanInvalidConfiguration
+from conan.tools.apple import to_apple_arch
 from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
 from conan.tools.files import save, load, copy, collect_libs
 from conan.tools.gnu import AutotoolsToolchain, AutotoolsDeps
@@ -19,11 +20,10 @@ class DjinniConan(ConanFile):
     url = "https://github.com/RGPaul/djinni"
     license = "Apache-2.0"
     exports_sources = "CMakeLists.txt", "src/*", "include/*", "extension-libs/*", "support-lib/*", "bin/djinni.jar"
-    #generators = "CMakeDeps"
+    generators = "CMakeDeps"
 
     def generate(self):
         tc = CMakeToolchain(self)
-        # customize toolchain "tc" 
         if self.settings.os == "Android":
             android_toolchain = os.environ["ANDROID_NDK_PATH"] + "/build/cmake/android.toolchain.cmake"
             tc.variables["CMAKE_SYSTEM_NAME"] = "Android"
@@ -33,25 +33,26 @@ class DjinniConan(ConanFile):
             tc.variables["ANDROID_STL"] = self.options.android_stl_type
             tc.variables["ANDROID_NATIVE_API_LEVEL"] = self.settings.os.api_level
             tc.variables["ANDROID_TOOLCHAIN"] = "clang"
-            tc.variables["DJINNI_WITH_JNI"] = "ON"
+            tc.cache_variables["DJINNI_WITH_JNI"] = True
 
         if self.settings.os == "iOS":
-            tc.variables["CMAKE_SYSTEM_NAME"] = "iOS"
-            tc.variables["CMAKE_OSX_DEPLOYMENT_TARGET"] = "10.0"
-            tc.variables["CMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH"] = "NO"
-            tc.variables["CMAKE_IOS_INSTALL_COMBINED"] = "YES"
-            tc.variables["CMAKE_OSX_SYSROOT"] = "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"
+            tc.cache_variables["CMAKE_SYSTEM_NAME"] = "iOS"
+            tc.cache_variables["CMAKE_OSX_DEPLOYMENT_TARGET"] = "10.0"
+            tc.cache_variables["CMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH"] = False
+            tc.cache_variables["CMAKE_IOS_INSTALL_COMBINED"] = True
+            tc.cache_variables["CMAKE_OSX_SYSROOT"] = "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"
 
-            tc.variables["DJINNI_WITH_OBJC"] = "ON"
+            tc.cache_variables["DJINNI_WITH_OBJC"] = True
 
             # define all architectures for ios fat library
             if "arm" in self.settings.arch:
-                tc.variables["CMAKE_OSX_ARCHITECTURES"] = "armv7;armv7s;arm64;arm64e"
+                tc.cache_variables["CMAKE_OSX_ARCHITECTURES"] = "armv7;armv7s;arm64;arm64e"
             else:
-                tc.variables["CMAKE_OSX_ARCHITECTURES"] = tools.to_apple_arch(self.settings.arch)
+                tc.cache_variables["CMAKE_OSX_ARCHITECTURES"] = to_apple_arch(self.settings.arch)
 
         if self.options.shared == False:
-            tc.variables["DJINNI_STATIC_LIB"] = "ON"
+            tc.cache_variables["DJINNI_STATIC_LIB"] = True
+
         tc.generate()
 
     def build(self):
