@@ -24,6 +24,7 @@ class DjinniConan(ConanFile):
 
     def generate(self):
         tc = CMakeToolchain(self)
+
         if self.settings.os == "Android":
             android_toolchain = os.environ["ANDROID_NDK_PATH"] + "/build/cmake/android.toolchain.cmake"
             tc.variables["CMAKE_SYSTEM_NAME"] = "Android"
@@ -41,14 +42,17 @@ class DjinniConan(ConanFile):
             tc.cache_variables["CMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH"] = False
             tc.cache_variables["CMAKE_IOS_INSTALL_COMBINED"] = True
             tc.cache_variables["CMAKE_OSX_SYSROOT"] = "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"
-
             tc.cache_variables["DJINNI_WITH_OBJC"] = True
 
             # define all architectures for ios fat library
             if "arm" in self.settings.arch:
                 tc.cache_variables["CMAKE_OSX_ARCHITECTURES"] = "armv7;armv7s;arm64;arm64e"
             else:
-                tc.cache_variables["CMAKE_OSX_ARCHITECTURES"] = to_apple_arch(self.settings.arch)
+                tc.cache_variables["CMAKE_OSX_ARCHITECTURES"] = to_apple_arch(self)
+
+        if self.settings.os == "Macos":
+            tc.cache_variables["DJINNI_WITH_OBJC"] = True
+            tc.cache_variables["CMAKE_OSX_ARCHITECTURES"] = to_apple_arch(self)
 
         if self.options.shared == False:
             tc.cache_variables["DJINNI_STATIC_LIB"] = True
