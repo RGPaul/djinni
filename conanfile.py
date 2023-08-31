@@ -26,11 +26,7 @@ class DjinniConan(ConanFile):
         tc = CMakeToolchain(self)
 
         if self.settings.os == "Android":
-            android_toolchain = os.environ["ANDROID_NDK_PATH"] + "/build/cmake/android.toolchain.cmake"
             tc.variables["CMAKE_SYSTEM_NAME"] = "Android"
-            tc.variables["CMAKE_TOOLCHAIN_FILE"] = android_toolchain
-            tc.variables["ANDROID_NDK"] = os.environ["ANDROID_NDK_PATH"]
-            tc.variables["ANDROID_ABI"] = tools.to_android_abi(self.settings.arch)
             tc.variables["ANDROID_STL"] = self.options.android_stl_type
             tc.variables["ANDROID_NATIVE_API_LEVEL"] = self.settings.os.api_level
             tc.variables["ANDROID_TOOLCHAIN"] = "clang"
