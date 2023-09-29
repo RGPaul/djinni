@@ -13,9 +13,8 @@ class DjinniConan(ConanFile):
     version = "470"
     author = "Ralph-Gordon Paul (development@rgpaul.com)"
     settings = "os", "compiler", "build_type", "arch"
-    options = {"shared": [True, False], "android_ndk": [None, "ANY"], 
-        "android_stl_type":["c++_static", "c++_shared"]}
-    default_options = {"shared": False, "android_ndk": None, "android_stl_type": "c++_static"}
+    options = {"shared": [True, False]}
+    default_options = {"shared": False}
     description = "A tool for generating cross-language type declarations and interface bindings."
     url = "https://github.com/RGPaul/djinni"
     license = "Apache-2.0"
@@ -27,7 +26,7 @@ class DjinniConan(ConanFile):
 
         if self.settings.os == "Android":
             tc.variables["CMAKE_SYSTEM_NAME"] = "Android"
-            tc.variables["ANDROID_STL"] = self.options.android_stl_type
+            tc.variables["ANDROID_STL"] = "c++_static"
             tc.variables["ANDROID_NATIVE_API_LEVEL"] = self.settings.os.api_level
             tc.variables["ANDROID_TOOLCHAIN"] = "clang"
             tc.cache_variables["DJINNI_WITH_JNI"] = True
@@ -108,11 +107,5 @@ class DjinniConan(ConanFile):
         if "arm" in self.info.settings.get_safe("arch") and self.info.settings.get_safe("os") == "iOS":
             self.info.settings.arch = "AnyARM"
 
-    def config_options(self):
-        # remove android specific option for all other platforms
-        if self.settings.os != "Android":
-            del self.options.android_ndk
-            del self.options.android_stl_type
-    
     def layout(self):
         cmake_layout(self)
